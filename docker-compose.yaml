@@ -1,0 +1,24 @@
+services:
+  mongo_db:
+    container_name: db_container
+    image: mongo:latest
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build: .
+    image: mernamaklad/userauthappey-api:latest
+    ports:
+      - 4000:3000
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo_db:27017
+      DB_NAME: weather-app
+    depends_on: 
+      - mongo_db
+
+volumes:
+  mongo_data: {}
+
+

@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+          command:
+            - mongod
+            - "--bind_ip_all"
+      volumes:
+        - name: mongo-data
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userauthapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: userauthapp
+  template:
+    metadata:
+      labels:
+        app: userauthapp
+    spec:
+      containers:
+        - name: userauthapp
+          image: mernamaklad/userauthappey-api:latest
+          ports:
+            - containerPort: 4000
+          env:
+            - name: DB_URI
+              value: mongodb://mongo:27017/weather-app
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: userauthapp
+spec:
+  selector:
+    app: userauthapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+      nodePort: 30001
+  type: LoadBalancer
+
